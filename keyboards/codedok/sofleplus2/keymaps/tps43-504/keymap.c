@@ -878,6 +878,19 @@ bool dip_switch_update_user(uint8_t index, bool active) {
 }
 #endif
 
+/* ----------- Leader Key -----------*/
+void leader_end_user(void) {
+    if (leader_sequence_two_keys(KC_S, KC_T)) {
+        SEND_STRING(SS_DOWN(X_LGUI));
+        0
+        SEND_STRING(SS_DOWN(X_LSFT));
+        SEND_STRING(SS_TAP(X_S));      
+        SEND_STRING(SS_UP(X_LGUI));
+        SEND_STRING(SS_UP(X_LSFT));                                                                                                                                          
+    }
+}
+0
+
 // ==================== Keymaps ====================
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {

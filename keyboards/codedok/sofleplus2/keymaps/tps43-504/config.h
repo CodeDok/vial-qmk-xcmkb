@@ -111,7 +111,27 @@
 #undef PRODUCT
 #define PRODUCT "SoflePLUS2 TPS43 v5.04.1 Beta"
 
+// Caps Word
+#define BOTH_SHIFTS_TURNS_ON_CAPS_WORD
+#define CAPS_WORD_INVERT_ON_SHIFT
+#define CAPS_WORD_IDLE_TIMEOUT 3000
 
+// Leader
+#define LEADER_PER_KEY_TIMING
+#define LEADER_TIMEOUT 350
+
+// Combo
+#define COMBO_TERM 50
+
+// Dynamic Macro
+#define DYNAMIC_MACRO_NO_NESTING
+
+// Key Override
+#define DUMMY_MOD_NEUTRALIZER_KEYCODE KC_RIGHT_CTRL
+#define MODS_TO_NEUTRALIZE { MOD_BIT(KC_LEFT_ALT), MOD_BIT(KC_LEFT_GUI), MOD_BIT(KC_LEFT_SHIFT), MOD_BIT(KC_RIGHT_SHIFT) }
+
+// Tri Layer
+#define TRI_LAYER_ADJUST_LAYER 4
 
 /* Vial UID for this specific keymap */
 #ifdef VIAL_ENABLE

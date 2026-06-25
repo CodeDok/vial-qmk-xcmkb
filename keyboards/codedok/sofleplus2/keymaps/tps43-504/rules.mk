@@ -34,4 +34,4 @@ DIP_SWITCH_ENABLE = yes
 ########### VIAL 0.7.4 ###########
 REPEAT_KEY_ENABLE = yes
 LAYER_LOCK_ENABLE = yes
-
+DYNAMIC_MACRO_ENABLE = yes
