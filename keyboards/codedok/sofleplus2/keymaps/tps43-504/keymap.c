@@ -891,7 +891,6 @@ void leader_end_user(void) {
 
 
 /* ----------- Caps Word -----------*/
--------#jfkld#s       
 bool caps_word_press_user(uint16_t keycode) {
     switch (keycode) {
         // Keycodes that continue Caps Word, with shift applied.
