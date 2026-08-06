@@ -112,8 +112,10 @@
 #define PRODUCT "SoflePLUS2 TPS43 v5.04.1 Beta"
 
 // Caps Word
+// NOTE: CAPS_WORD_INVERT_ON_SHIFT is NOT defined here — Vial's
+// builddefs/build_vial.mk already injects it via -D when QMK_SETTINGS=yes,
+// so defining it here would trigger a "redefined" warning on every compile unit.
 #define BOTH_SHIFTS_TURNS_ON_CAPS_WORD
-#define CAPS_WORD_INVERT_ON_SHIFT
 #define CAPS_WORD_IDLE_TIMEOUT 3000
 
 // Leader
@@ -133,7 +135,6 @@
 // Tri Layer
 #define TRI_LAYER_ADJUST_LAYER 4
 
-/* Vial UID for this specific keymap */
 #ifdef VIAL_ENABLE
 #define VIAL_KEYBOARD_UID {0x7C, 0x2A, 0xD4, 0x91, 0xE6, 0x3F, 0xB8, 0x50}
 #endif

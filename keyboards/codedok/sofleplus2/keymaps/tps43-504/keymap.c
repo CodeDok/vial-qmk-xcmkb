@@ -25,6 +25,9 @@
 #include "os_detection.h"
 #include "platforms/eeprom.h"
 #include "digitizer_mouse_fallback.h"
+#if defined(QMK_SETTINGS)
+#    include "qmk_settings.h"  // QS_tapping_* runtime UI settings (Vial QMK Settings)
+#endif
 
 #if defined(VIALRGB_ENABLE) && !defined(VIALRGB_NO_DIRECT)
 #include "transactions.h"
@@ -878,6 +881,67 @@ bool dip_switch_update_user(uint8_t index, bool active) {
 }
 #endif
 
+/* ----------- Chordal Hold Exception for Ctrl (copy/paste/cut) -----------*/
+/* CHORDAL_HOLD + HOLD_ON_OTHER_KEY_PRESS_PER_KEY are injected by Vial's       */
+/* builddefs/build_vial.mk when QMK_SETTINGS=yes. The canonical                */
+/* get_hold_on_other_key_press() / get_chordal_hold() live in                  */
+/* quantum/qmk_settings.c (reading the Vial QMK Settings UI) but are declared  */
+/* __attribute__((weak)) there, so the strong versions here override them.     */
+/*                                                                             */
+/* To keep the UI toggles functional, these strong versions DEFER to the Vial  */
+/* runtime settings (QS_tapping_*) for everything except a per-key exception:  */
+/* same-hand rolls of Ctrl + C/V/X always hold, so quick rolls produce         */
+/* Ctrl+C (copy) / Ctrl+V (paste) / Ctrl+X (cut) even when Chordal Hold is ON.  */
+/*                                                                             */
+/* Behavior matrix (left Ctrl = LCTL_T(KC_D), same hand as C/V/X):             */
+/*   Chordal Hold ON : same-hand non-C/V/X roll -> tap (normal typing)          */
+/*                     same-hand C/V/X roll    -> hold (copy/paste/cut)         */
+/*                     opposite-hand roll      -> hold (default opposite-hands)  */
+/*   Chordal Hold OFF: every roll             -> hold (Vial's default)           */
+bool get_hold_on_other_key_press(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case LCTL_T(KC_D):
+        case RCTL_T(KC_K):
+            /* Ctrl mod-taps are always eager-hold so the chordal-hold per-key
+             * exception below can engage on same-hand rolls. */
+            return true;
+        default:
+            /* All other tap-hold keys follow the Vial UI toggle. */
+#if defined(QMK_SETTINGS)
+            return QS_tapping_hold_on_other_key_press;
+#else
+            return false;
+#endif
+    }
+}
+
+bool get_chordal_hold(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record, uint16_t other_keycode, keyrecord_t *other_record) {
+    /* Per-key exception: same-hand Ctrl + C/V/X -> hold (copy/paste/cut).
+     * RCTL_T(KC_K) + C/V/X is already opposite-hand (covered by the default
+     * opposite-hands rule below), so only the left Ctrl needs this exception. */
+    switch (tap_hold_keycode) {
+        case LCTL_T(KC_D):
+            switch (other_keycode) {
+                case KC_C:  // copy
+                case KC_V:  // paste
+                case KC_X:  // cut
+                case KC_F:  // findsd
+                    return true;
+            }
+            break;
+    }
+    /* Defer to the Vial UI "Chordal Hold" toggle:
+     *   ON  -> opposite-hands rule (same-hand rolls = tap, opposite = hold)
+     *   OFF -> always hold (no chordal gating) */
+#if defined(QMK_SETTINGS)
+    if (QS_tapping_chordal_hold)
+        return get_chordal_hold_default(tap_hold_record, other_record);
+    return true;
+#else
+    return get_chordal_hold_default(tap_hold_record, other_record);
+#endif
+}
+
 /* ----------- Leader Key -----------*/
 void leader_end_user(void) {
     if (leader_sequence_two_keys(KC_S, KC_T)) {
@@ -911,6 +975,16 @@ bool caps_word_press_user(uint16_t keycode) {
             return false;  // Deactivate Caps Word.
     }
 }
+
+
+const char chordal_hold_layout[MATRIX_ROWS][MATRIX_COLS] PROGMEM = LAYOUT(
+    'L', 'L', 'L', 'L', 'L', 'L',                     'R', 'R', 'R', 'R', 'R', 'R',
+    'L', 'L', 'L', 'L', 'L', 'L',                     'R', 'R', 'R', 'R', 'R', 'R',
+    'L', 'L', 'L', 'L', 'L', 'L',                     'R', 'R', 'R', 'R', 'R', 'R',
+    'L', 'L', 'L', 'L', 'L', 'L', 'L',           'R', 'R', 'R', 'R', 'R', 'R', 'R',
+              '*', '*', '*', '*', '*',           '*', '*', '*', '*', '*',
+                                 '*', '*', '*', '*', '*'
+);
 
 // ==================== Keymaps ====================
 
@@ -1581,12 +1655,6 @@ static const char PROGMEM gesture_scroll[] = {
 
 static const char gesture_blank[64] PROGMEM = {0};
 
-static const char* get_trackpad_gesture_bitmap(uint8_t layer) {
-    if (user_config.scroll_layers & (1 << layer)) return gesture_scroll;
-    if (user_config.swipe2_layers & (1 << layer)) return gesture_2finger;
-    if (user_config.swipe3_layers & (1 << layer)) return gesture_3finger;
-    return gesture_default;
-}
 static const char* get_trackpad_gesture_bitmap_by_mode(uint8_t mode) {
     switch (mode) {
         case 1: return gesture_scroll;
